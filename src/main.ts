@@ -1,18 +1,118 @@
 import "./style.css";
 
-const scoreText = document.querySelector<HTMLButtonElement>("#score");
-const timerText = document.querySelector<HTMLButtonElement>("#timer");
-const allTimersUL = document.querySelector<HTMLUListElement>("#all-timers");
-const bestTimeText = document.querySelector<HTMLButtonElement>("#best-time");
+import { initializeApp } from "firebase/app";
+import {
+	getAuth,
+	GoogleAuthProvider,
+	signInWithPopup,
+	signOut,
+	User,
+} from "firebase/auth";
+import { get } from "firebase/database";
+import {
+	getFirestore,
+	collection,
+	addDoc,
+	setDoc,
+	doc,
+	getDoc,
+	query,
+	where,
+	getDocs,
+	orderBy,
+} from "firebase/firestore";
 
-const userTime = 1706466222000;
-const userAllTimers = "2040|30031|21331|313133451";
+interface UserData {
+	timer: number;
+	allTimers: string;
+}
 
-setScore();
-setTimer();
-setAllTimers();
+const firebaseConfig = {
+	apiKey: "AIzaSyBg69FcbJUuczrlUtjT09gQRujerXkIXvc",
+	authDomain: "the-game-timer.firebaseapp.com",
+	projectId: "the-game-timer",
+	storageBucket: "the-game-timer.appspot.com",
+	messagingSenderId: "528262355745",
+	appId: "1:528262355745:web:873bb3fc78b0e235f9fc60",
+};
 
-function setScore() {
+const firebase = initializeApp(firebaseConfig);
+const auth = getAuth(firebase);
+const db = getFirestore(firebase);
+const provider = new GoogleAuthProvider();
+
+const signInBtn = document.getElementById("sign-in-btn");
+const signOutBtn = document.getElementById("sign-out-btn");
+
+signInBtn!.onclick = () =>
+	signInWithPopup(auth, provider).catch((error) => console.error(error));
+signOutBtn!.onclick = () => {
+	signOut(auth);
+	location.reload();
+}; //! Warning change if the reaload take too much ressources instead of using logoutUser()
+
+const appDiv = document.getElementById("app");
+const scoreText = document.getElementById("score");
+const timerText = document.getElementById("timer");
+const allTimersUL = document.getElementById("all-timers");
+const bestTimeText = document.getElementById("best-time");
+
+let user: User;
+let unsubscribe: () => any;
+
+auth.onAuthStateChanged((user) => {
+	if (user) {
+		loginUser(user);
+	} else {
+		unsubscribe && unsubscribe();
+	}
+});
+
+/**
+ * Init the user informations
+ *
+ * @param {User} loggedUser
+ */
+async function loginUser(loggedUser: User) {
+	user = loggedUser;
+	console.log(user);
+
+	appDiv?.classList.add("signed-in");
+
+	const userData = await getUserData();
+
+	setScore(userData.timer);
+	setTimer();
+	setAllTimers(userData.allTimers);
+}
+
+function getUserData(): Promise<UserData> {
+	const userDataDoc = doc(db, "timer", user.uid);
+	const userData = getDoc(userDataDoc);
+
+	let userTimers;
+
+	return new Promise((resolve, _reject) => {
+		userData.then((data) => {
+			userTimers = data.data();
+			if (!userTimers) {
+				userTimers = {
+					timer: 0,
+					allTimers: "",
+				};
+			}
+			resolve(userTimers as UserData);
+		});
+	});
+}
+
+function updateUserData(userData: UserData) {
+	// const userDataDoc = doc(db, "timer", user.uid);
+	// setDoc(userDataDoc, userData);
+	//TODO
+}
+
+function setScore(userTime: number) {
 	const currentTime = new Date().getTime();
 
 	console.log("Current time: " + currentTime);
@@ -21,20 +121,11 @@ function setScore() {
 
 	console.log("Time between: " + timeBetween);
 
-	const yearsBetween = Math.floor(timeBetween / 31536000000);
-	const daysBetween = Math.floor((timeBetween % 31536000000) / 86400000);
-	const hoursBetween = Math.floor(
-		((timeBetween % 31536000000) % 86400000) / 3600000
+	const humanTimeBetween = secondsToYearsDaysHoursMinutesSeconds(
+		Math.floor(timeBetween / 1000),
+		true
 	);
-	const minutesBetween = Math.floor(
-		(((timeBetween % 31536000000) % 86400000) % 3600000) / 60000
-	);
-	const secondsBetween = Math.floor(
-		((((timeBetween % 31536000000) % 86400000) % 3600000) % 60000) / 1000
-	);
-
-	const humanTimeBetween = `${yearsBetween} years, ${daysBetween} days, ${hoursBetween} hours, ${minutesBetween} minutes, ${secondsBetween} seconds`;
-
+	console.log(humanTimeBetween);
 	scoreText!.innerHTML = humanTimeBetween;
 }
 
@@ -49,7 +140,7 @@ function setTimer() {
 	}, 1000);
 }
 
-function setAllTimers() {
+function setAllTimers(userAllTimers: string) {
 	const allTimers = userAllTimers.split("|");
 	let best = 0;
 

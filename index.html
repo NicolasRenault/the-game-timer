@@ -1,29 +1,33 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Vite + TS</title>
-  </head>
-  <body>
-    <div id="app">
-      <h1>The Game Timer</h1>
-      <p id="score">20 jours, 30 minutes et 13 secondes</p>
-      <p id="timer">00:00:00</p>
-      <div>
-        <p>
-          Best time:
-          <span id="best-time">1 jours, 30 minutes et 13 secondes</span>
-        </p>
+	<head>
+		<meta charset="UTF-8" />
+		<link rel="icon" type="image/svg+xml" href="/vite.svg" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>Vite + TS</title>
+	</head>
+	<body>
+		<div id="app">
+			<h1>The Game Timer</h1>
+			<button id="sign-in-btn" class="hide-when-signed-in">sign-in-btn</button>
+			<button id="sign-out-btn" class="hide-when-not-signed-in">sign-out-btn</button>
+      <div class="hide-when-not-signed-in">
+        <p id="score"></p>
+        <p id="timer"></p>
         <div>
-          <p>All scores</p>
-          <ul id="all-timers">
+          <p>
+            Best time:
+            <span id="best-time"></span>
+          </p>
+          <div>
+            <p>All scores</p>
+            <ul id="all-timers">
+            </div>
           </div>
         </div>
       </div>
-    </div>
+		</div>
 
-    <script type="module" src="/src/main.ts"></script>
-  </body>
+		<script type="module" src="/src/main.ts"></script>
+	</body>
 </html>
