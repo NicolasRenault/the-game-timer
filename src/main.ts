@@ -81,11 +81,19 @@ async function loginUser(loggedUser: User) {
 
 	const userData = await getUserData();
 
+	//TODO mettre le timer dans allTimers
+	//TODO updateUserData(userData);
+
 	setScore(userData.timer);
 	setTimer();
 	setAllTimers(userData.allTimers);
 }
 
+/**
+ * Get the user data from the firestore using the user id
+ *
+ * @returns
+ */
 function getUserData(): Promise<UserData> {
 	const userDataDoc = doc(db, "timer", user.uid);
 	const userData = getDoc(userDataDoc);
@@ -106,13 +114,26 @@ function getUserData(): Promise<UserData> {
 	});
 }
 
+/**
+ * Update the user data in the firestore
+ *
+ * @param userData
+ */
 function updateUserData(userData: UserData) {
 	// const userDataDoc = doc(db, "timer", user.uid);
 	// setDoc(userDataDoc, userData);
 	//TODO
 }
 
+/**
+ * Display the last user
+ *
+ * @param userTime
+ * @returns
+ */
 function setScore(userTime: number) {
+	if (!userTime) return;
+	console.log(userTime);
 	const currentTime = new Date().getTime();
 
 	console.log("Current time: " + currentTime);
@@ -129,8 +150,12 @@ function setScore(userTime: number) {
 	scoreText!.innerHTML = humanTimeBetween;
 }
 
+/**
+ * Set a timer and update it every second
+ */
 function setTimer() {
 	let timer = 0;
+	timerText!.innerHTML = secondsToYearsDaysHoursMinutesSeconds(timer);
 
 	setInterval(() => {
 		const time = secondsToYearsDaysHoursMinutesSeconds(timer);
@@ -140,7 +165,14 @@ function setTimer() {
 	}, 1000);
 }
 
+/**
+ * Display all the previous user times and the best time.
+ *
+ * @param userAllTimers
+ * @returns
+ */
 function setAllTimers(userAllTimers: string) {
+	if (!userAllTimers) return;
 	const allTimers = userAllTimers.split("|");
 	let best = 0;
 
@@ -162,6 +194,13 @@ function setAllTimers(userAllTimers: string) {
 		);
 }
 
+/**
+ * Convert seconds to years, days, hours, minutes and seconds
+ *
+ * @param {number} time
+ * @param {boolean} [verbose=false] If true, the function will return the time in a verbose way (e.g. 1 year, 2 days, 3 hours, 4 minutes, 5 seconds). Else it will return the time in a short way (e.g. 1 years, 2days, 03:04:05)
+ * @returns
+ */
 function secondsToYearsDaysHoursMinutesSeconds(time: number, verbose = false) {
 	const years = Math.floor(time / 31536000);
 	const days = Math.floor((time % 31536000) / 86400);
